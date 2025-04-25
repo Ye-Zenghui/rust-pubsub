@@ -1,6 +1,6 @@
 [package]
 name = "rust-pubsub"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A thread-safe, in-memory publish-subscribe library for Rust with flexible subscription modes."
 license = "MIT OR Apache-2.0"
