@@ -183,45 +183,54 @@ rust-pubsub = "0.1.0"
 #### `src/main.rs`
 
 ```rust
-use rust_pubsub::TopicConfig;
-use std::thread;
-
-mod publisher;
-mod subscriber;
-
-fn main() {
-    // 启动订阅者
-    subscriber::manual_subscriber();
-    subscriber::callback_subscriber();
-
-    // 启动发布者
-    thread::spawn(|| publisher::publisher_one());
-    thread::spawn(|| publisher::publisher_two());
-
-    // 等待观察
-    thread::sleep(std::time::Duration::from_millis(100));
-}
-```
-
-#### `src/publisher.rs`
-
-```rust
-use rust_pubsub::{PubSub, TopicConfig};
-
-// 自定义消息结构体
+// Custom message struct
 #[derive(Clone)]
 pub struct CustomMessage {
     pub id: u32,
     pub content: String,
 }
 
+mod publisher;
+mod subscriber;
+
+fn main() {
+    // Start two subscribers
+    subscriber::manual_subscriber();
+    subscriber::callback_subscriber();
+
+    // Start two publishers
+    publisher::publisher_one();
+    publisher::publisher_two();
+
+    loop {
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+    }
+}
+```
+
+#### `src/publisher.rs`
+
+```rust
+use rust_pubsub::PubSub;
+
+use crate::CustomMessage;
+
 pub fn publisher_one() {
     let pubsub = PubSub::instance();
     let topic = "multi_topic";
     let topic_id = pubsub.create_publisher(topic);
-    pubsub.publish(topic_id, CustomMessage {
-        id: 1,
-        content: "来自发布者 1 的消息".to_string(),
+
+    std::thread::spawn(move || {
+        loop {
+            pubsub.publish(
+                topic_id,
+                CustomMessage {
+                    id: 1,
+                    content: "Message from publisher 1".to_string(),
+                },
+            );
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+        }
     });
 }
 
@@ -229,9 +238,18 @@ pub fn publisher_two() {
     let pubsub = PubSub::instance();
     let topic = "multi_topic";
     let topic_id = pubsub.create_publisher(topic);
-    pubsub.publish(topic_id, CustomMessage {
-        id: 2,
-        content: "来自发布者 2 的消息".to_string(),
+    std::thread::spawn(move || {
+        loop {
+            pubsub.publish(
+                topic_id,
+                CustomMessage {
+                    id: 2,
+                    content: "Message from publisher 2".to_string(),
+                },
+            );
+
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+        }
     });
 }
 ```
@@ -242,21 +260,18 @@ pub fn publisher_two() {
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
-// 自定义消息结构体（必须定义或导入）
-#[derive(Clone)]
-pub struct CustomMessage {
-    pub id: u32,
-    pub content: String,
-}
+use crate::CustomMessage;
 
 pub fn manual_subscriber() {
     let pubsub = PubSub::instance();
     let topic = "multi_topic";
-    let config = TopicConfig::new(10, false); // 队列满时停止写入
+    let config = TopicConfig::new(10, true); // Overwrite when queue is full
     let receiver = pubsub.subscribe_manual::<CustomMessage>(topic, config);
     thread::spawn(move || {
-        if let Some(msg) = receiver.try_recv() {
-            println!("手动订阅者：ID={}, 内容={}", msg.id, msg.content);
+        loop {
+            if let Some(msg) = receiver.recv() {
+                println!("Manual subscriber received: ID={}, Content={}", msg.id, msg.content);
+            }
         }
     });
 }
@@ -264,9 +279,9 @@ pub fn manual_subscriber() {
 pub fn callback_subscriber() {
     let pubsub = PubSub::instance();
     let topic = "multi_topic";
-    let config = TopicConfig::new(10, false); // 队列满时停止写入
+    let config = TopicConfig::new(10, false); // Stop writing when queue is full
     pubsub.subscribe::<CustomMessage, _>(topic, config, |msg: &CustomMessage| {
-        println!("回调订阅者：ID={}, 内容={}", msg.id, msg.content); // 在专用线程中运行
+        println!("Callback subscriber received: ID={}, Content={}", msg.id, msg.content); // The closure will execute in a separate internal thread
     });
 }
 ```
