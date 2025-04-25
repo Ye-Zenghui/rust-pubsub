@@ -20,6 +20,15 @@
 //! - **类型安全消息**：支持任何满足 `Send + Sync + Clone + 'static` 的消息类型。
 //! - **超时支持**：提供阻塞、非阻塞和带超时的消息接收与发布。
 //!
+//! ## API Overview
+//!
+//! The library offers two main subscription methods:
+//!
+//! - **`subscribe_manual`**: Returns a receiver that allows manually polling for messages.
+//! - **`subscribe`**: Takes a callback closure that processes messages in a dedicated thread.
+//!   This non-blocking approach runs the provided closure in its own thread, making it ideal
+//!   for operations that shouldn't block the main thread.
+//!
 //! ## Usage Examples
 //!
 //! ### 1. Manual Subscription with Non-Blocking Receive
@@ -73,7 +82,60 @@
 //! pubsub.unsubscribe(&subscriber_id);
 //! ```
 //!
-//! ### 3. Publishing with Timeout
+//! ### 3. Non-Blocking Callback Processing in Dedicated Thread
+//!
+//! This example demonstrates how the `subscribe` method's callback is processed in its own dedicated thread,
+//! allowing your main thread to continue execution without being blocked by message processing.
+//!
+//! ```rust
+//! use rust_pubsub::{PubSub, TopicConfig};
+//! use std::sync::{Arc, Mutex};
+//! use std::thread;
+//! use std::time::Duration;
+//!
+//! // Create a shared counter to demonstrate the callback running in a separate thread
+//! let counter = Arc::new(Mutex::new(0));
+//! let counter_clone = counter.clone();
+//!
+//! let pubsub = PubSub::instance();
+//! let topic = "thread_topic";
+//! let config = TopicConfig::new(5, true);
+//! let topic_id = pubsub.create_publisher(topic);
+//!
+//! // Subscribe with a callback that will increment the counter
+//! pubsub.subscribe::<i32, _>(topic, config, move |msg: &i32| {
+//!     // This closure runs in a dedicated thread
+//!     println!("Processing message: {} in a dedicated thread", msg);
+//!     
+//!     // Simulate some processing time
+//!     thread::sleep(Duration::from_millis(500));
+//!     
+//!     // Update the shared counter
+//!     let mut count = counter_clone.lock().unwrap();
+//!     *count += 1;
+//!     println!("Counter updated to: {}", *count);
+//! });
+//!
+//! // Publish multiple messages
+//! for i in 1..=5 {
+//!     pubsub.publish(topic_id, i);
+//!     
+//!     // Main thread can continue doing work without waiting for message processing
+//!     println!("Main thread: Published message {}", i);
+//! }
+//!
+//! // Main thread can do other work while callbacks are processed in background
+//! println!("Main thread: Continuing with other work immediately");
+//!
+//! // Wait briefly to allow some callback processing to occur
+//! thread::sleep(Duration::from_millis(1000));
+//!
+//! // Check how many messages were processed
+//! let final_count = *counter.lock().unwrap();
+//! println!("Messages processed so far: {}", final_count);
+//! ```
+//!
+//! ### 4. Publishing with Timeout
 //!
 //! ```rust
 //! use rust_pubsub::{PubSub, TopicConfig};
@@ -97,7 +159,7 @@
 //! }
 //! ```
 //!
-//! ### 4. Overwrite Mode with Full Queue
+//! ### 5. Overwrite Mode with Full Queue
 //!
 //! ```rust
 //! use rust_pubsub::{PubSub, TopicConfig};
@@ -110,7 +172,7 @@
 //! let topic_id = pubsub.create_publisher(topic);
 //!
 //! // Subscribe manually
-//! let receiver = pubsub.subscribe_manual::<String>( کمپل, config);
+//! let receiver = pubsub.subscribe_manual::<String>( topic, config);
 //!
 //! // Publish multiple messages to fill queue
 //! pubsub.publish(topic_id, "Message 1".to_string());
@@ -123,7 +185,7 @@
 //! }
 //! ```
 //!
-//! ### 5. Multiple Subscribers
+//! ### 6. Multiple Subscribers
 //!
 //! ```rust
 //! use rust_pubsub::{PubSub, TopicConfig};
