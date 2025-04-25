@@ -1,27 +1,40 @@
-Rust PubSub
+# Rust PubSub
+
 A thread-safe, in-memory publish-subscribe library for Rust, designed for efficient inter-thread communication. It supports multiple publishers and subscribers across files, arbitrary message formats, customizable queue-full behavior, and callback processing in dedicated threads, ideal for modular Rust projects.
-中文文档
-Features
 
-Thread-Safe: Built with crossbeam-channel for safe message passing between threads.
-Multi-Publisher and Multi-Subscriber: Supports multiple publishers and subscribers for the same topic.
-Modular Design: Enables publishing and subscribing across files and modules via a singleton PubSub instance.
-Arbitrary Message Formats: Supports any type implementing Send + Sync + Clone + 'static, including custom structs.
-Customizable Queue Behavior: Each subscriber can choose to overwrite old messages or stop writing when the queue is full.
-Callback Processing: Callbacks run in dedicated threads for non-blocking operation.
-Flexible Subscriptions: Offers manual receiving and callback-based subscriptions.
-Timeout Support: Provides blocking, non-blocking, and timeout-based operations.
+[**中文文档**](#中文文档)
 
-Installation
-Add to your Cargo.toml:
+## Features
+
+- **Thread-Safe**: Built with `crossbeam-channel` for safe message passing between threads.
+- **Multi-Publisher and Multi-Subscriber**: Supports multiple publishers and subscribers for the same topic.
+- **Modular Design**: Enables publishing and subscribing across files and modules via a singleton `PubSub` instance.
+- **Arbitrary Message Formats**: Supports any type implementing `Send + Sync + Clone + 'static`, including custom structs.
+- **Customizable Queue Behavior**: Each subscriber can choose to overwrite old messages or stop writing when the queue is full.
+- **Callback Processing**: Callbacks run in dedicated threads for non-blocking operation.
+- **Flexible Subscriptions**: Offers manual receiving and callback-based subscriptions.
+- **Timeout Support**: Provides blocking, non-blocking, and timeout-based operations.
+
+## Installation
+
+Add to your `Cargo.toml`:
+
+```toml
 [dependencies]
 rust-pubsub = "0.1.0"
+```
 
-Usage Examples
+## Usage Examples
+
 Below are examples demonstrating multi-publisher and multi-subscriber communication, arbitrary message formats (using a custom struct), customizable queue-full behavior, callback processing in dedicated threads, and modular design across files.
-1. Multi-Publisher and Multi-Subscriber Across Files with Custom Struct
-This example shows two publishers and two subscribers in separate files, using a custom struct CustomMessage as the message type. One subscriber uses a callback in a dedicated thread, highlighting modular design and arbitrary message formats.
-src/main.rs
+
+### 1. Multi-Publisher and Multi-Subscriber Across Files with Custom Struct
+
+This example shows two publishers and two subscribers in separate files, using a custom struct `CustomMessage` as the message type. One subscriber uses a callback in a dedicated thread, highlighting modular design and arbitrary message formats.
+
+#### `src/main.rs`
+
+```rust
 use rust_pubsub::TopicConfig;
 use std::thread;
 
@@ -40,8 +53,11 @@ fn main() {
     // Wait to observe
     thread::sleep(std::time::Duration::from_millis(100));
 }
+```
 
-src/publisher.rs
+#### `src/publisher.rs`
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 
 // Custom message struct
@@ -70,8 +86,11 @@ pub fn publisher_two() {
         content: "Message from Publisher 2".to_string(),
     });
 }
+```
 
-src/subscriber.rs
+#### `src/subscriber.rs`
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -102,9 +121,13 @@ pub fn callback_subscriber() {
         println!("Callback Subscriber: ID={}, Content={}", msg.id, msg.content); // Runs in a dedicated thread
     });
 }
+```
 
-2. Customizable Queue-Full Behavior
+### 2. Customizable Queue-Full Behavior
+
 This example shows two subscribers with different queue-full behaviors: one overwrites old messages, the other stops writing when the queue is full.
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -137,9 +160,13 @@ pubsub.publish(topic_id, "Message 3".to_string()); // Overwrite affects Subscrib
 
 // Wait to observe
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-3. Callback Subscription with Dedicated Thread
+### 3. Callback Subscription with Dedicated Thread
+
 This example demonstrates a callback-based subscription, with the callback running in a dedicated thread. Any message type can be used.
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -158,9 +185,13 @@ pubsub.publish(topic_id, "Callback Message".to_string());
 
 // Wait to observe
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-4. Publishing with Timeout
+### 4. Publishing with Timeout
+
 This example shows publishing with a timeout, receiving in a separate thread. Any message type can be used.
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -182,9 +213,13 @@ pubsub.publish_with_timeout(topic_id, 42, Some(100));
 
 // Wait to observe
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-5. Overwrite Mode with Full Queue
+### 5. Overwrite Mode with Full Queue
+
 This example demonstrates publishing to a full queue with overwrite mode, receiving in a separate thread. Any message type can be used.
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -208,34 +243,51 @@ pubsub.publish(topic_id, "Message 3".to_string()); // Overwrites oldest message
 
 // Wait to observe
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-License
+## License
+
 Licensed under either of Apache License, Version 2.0 or MIT license at your option.
 
-中文文档
+---
+
+# 中文文档
+
 Rust PubSub 是一个线程安全的、基于内存的发布-订阅库，专为 Rust 设计，旨在实现高效的线程间通信。它支持多个发布者和订阅者、任意消息格式、跨文件通信、每个订阅者可自定义队列满行为以及在专用线程中处理回调，非常适合模块化的 Rust 项目。
-English Documentation
-功能
 
-线程安全：使用 crossbeam-channel 实现线程间安全消息传递。
-多发布者和多订阅者：支持同一主题的多个发布者和订阅者。
-模块化设计：通过单例 PubSub 实例，支持跨文件和模块的发布和订阅。
-任意消息格式：支持任何实现 Send + Sync + Clone + 'static 的类型，包括自定义结构体。
-可自定义队列行为：每个订阅者可配置队列满时覆盖旧消息或停止写入。
-回调处理：回调在单独线程中处理，确保非阻塞。
-灵活订阅：支持手动接收和基于回调的订阅。
-超时支持：提供阻塞、非阻塞和带超时操作。
+[**English Documentation**](#rust-pubsub)
 
-安装
-在 Cargo.toml 中添加：
+## 功能
+
+- **线程安全**：使用 `crossbeam-channel` 实现线程间安全消息传递。
+- **多发布者和多订阅者**：支持同一主题的多个发布者和订阅者。
+- **模块化设计**：通过单例 `PubSub` 实例，支持跨文件和模块的发布和订阅。
+- **任意消息格式**：支持任何实现 `Send + Sync + Clone + 'static` 的类型，包括自定义结构体。
+- **可自定义队列行为**：每个订阅者可配置队列满时覆盖旧消息或停止写入。
+- **回调处理**：回调在单独线程中处理，确保非阻塞。
+- **灵活订阅**：支持手动接收和基于回调的订阅。
+- **超时支持**：提供阻塞、非阻塞和带超时操作。
+
+## 安装
+
+在 `Cargo.toml` 中添加：
+
+```toml
 [dependencies]
 rust-pubsub = "0.1.0"
+```
 
-使用示例
+## 使用示例
+
 以下示例展示了多发布者和多订阅者通信、任意消息格式（使用自定义结构体）、可自定义队列满行为、在专用线程中处理回调以及跨文件模块化设计。
-1. 跨文件的多发布者和多订阅者（使用自定义结构体）
-此示例展示在不同文件中定义的两个发布者和两个订阅者，使用自定义结构体 CustomMessage 作为消息类型。一个订阅者使用回调，在内部专用线程中处理。
-src/main.rs
+
+### 1. 跨文件的多发布者和多订阅者（使用自定义结构体）
+
+此示例展示在不同文件中定义的两个发布者和两个订阅者，使用自定义结构体 `CustomMessage` 作为消息类型。一个订阅者使用回调，在内部专用线程中处理。
+
+#### `src/main.rs`
+
+```rust
 use rust_pubsub::TopicConfig;
 use std::thread;
 
@@ -254,8 +306,11 @@ fn main() {
     // 等待观察
     thread::sleep(std::time::Duration::from_millis(100));
 }
+```
 
-src/publisher.rs
+#### `src/publisher.rs`
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 
 // 自定义消息结构体
@@ -284,8 +339,11 @@ pub fn publisher_two() {
         content: "来自发布者 2 的消息".to_string(),
     });
 }
+```
 
-src/subscriber.rs
+#### `src/subscriber.rs`
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -316,9 +374,13 @@ pub fn callback_subscriber() {
         println!("回调订阅者：ID={}, 内容={}", msg.id, msg.content); // 在专用线程中运行
     });
 }
+```
 
-2. 可自定义队列满行为
+### 2. 可自定义队列满行为
+
 此示例展示两个订阅者配置不同的队列满行为：一个覆盖旧消息，另一个队列满时停止写入。可使用任意消息类型。
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -351,9 +413,13 @@ pubsub.publish(topic_id, "消息 3".to_string()); // 仅影响覆盖订阅者
 
 // 等待观察
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-3. 带专用线程的回调订阅
+### 3. 带专用线程的回调订阅
+
 此示例展示回调订阅，回调在内部专用线程中处理。可使用任意消息类型。
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -372,9 +438,13 @@ pubsub.publish(topic_id, "回调消息".to_string());
 
 // 等待观察
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-4. 带超时的发布
+### 4. 带超时的发布
+
 此示例展示使用超时发布消息，接收在单独线程中进行。可使用任意消息类型。
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -396,9 +466,13 @@ pubsub.publish_with_timeout(topic_id, 42, Some(100));
 
 // 等待观察
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-5. 队列满时的覆盖模式
+### 5. 队列满时的覆盖模式
+
 此示例展示队列满时使用覆盖模式，接收在单独线程中进行。可使用任意消息类型。
+
+```rust
 use rust_pubsub::{PubSub, TopicConfig};
 use std::thread;
 
@@ -422,6 +496,8 @@ pubsub.publish(topic_id, "消息 3".to_string()); // 覆盖最早的消息
 
 // 等待观察
 thread::sleep(std::time::Duration::from_millis(100));
+```
 
-许可证
+## 许可证
+
 本项目采用 Apache 2.0 或 MIT 许可证，供您选择。
