@@ -5,7 +5,7 @@ edition = "2024"
 description = "A thread-safe, in-memory publish-subscribe library for Rust with flexible subscription modes."
 license = "MIT OR Apache-2.0"
 authors = ["yezenghui <y956370541@163.com>"]
-repository = "https://github.com/yezenghui/rust-pubsub"
+repository = "https://github.com/Ye-Zenghui/rust-pubsub"
 keywords = ["pubsub", "mpmc", "emmit", "bus", "queue", "event", "messaging", "thread-safe", "concurrency"]
 categories = ["concurrency", "data-structures"]
 
