@@ -227,13 +227,16 @@ impl ChannelPair {
 }
 
 struct TopicData {
+    #[allow(dead_code)]
     name: String,
     channel_pairs: Vec<ChannelPair>,
 }
 
 struct SubscriberData {
     topic: String,
+    #[allow(dead_code)]
     receiver: Receiver<MessageWrapper>,
+    #[allow(dead_code)]
     callback: Option<Arc<dyn Fn(&dyn Any) + Send + Sync>>,
 }
 
@@ -456,7 +459,7 @@ impl PubSub {
                 }
             }
 
-            let _ = pair.sender.can_try_send(msg.clone());
+            let _ = pair.sender.try_send(msg.clone());
         }
     }
 
